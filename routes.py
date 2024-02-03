@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Body, Request, Response, HTTPException, status
+from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from fastapi.encoders import jsonable_encoder
-from helpers import isValidShortCode
+from helpers import isValidShortCode, generateRandomShortCode
 
 class UrlItemBody(BaseModel):
     url: str
@@ -20,7 +20,20 @@ async def create_shorturl(urlbody: UrlItemBody, request: Request):
         raise HTTPException(status_code=400, detail="Url not present")
     
     if (urlbody.shortcode is None or urlbody.shortcode == ""):
-        return {"shortcode" : 777}
+        generatedShordCode = generateRandomShortCode()
+        collisionClearance = False
+        while(not collisionClearance):
+            check_for_collision = request.app.database["urls"].find_one({"shortcode": urlbody.shortcode})
+            if not check_for_collision:
+                collisionClearance = True
+            else:
+                generatedShordCode = generateRandomShortCode()
+
+        urlItemEncoded = jsonable_encoder({"url": urlbody.url, "shortcode" : generatedShordCode})
+        new_urlItem = request.app.database["urls"].insert_one(urlItemEncoded)
+        created_urlItem = request.app.database["urls"].find_one({"_id": new_urlItem.inserted_id})
+        
+        return {"shortcode" : generatedShordCode}
     
     check_existing_shortcode = request.app.database["urls"].find_one(
         {"shortcode": urlbody.shortcode}
