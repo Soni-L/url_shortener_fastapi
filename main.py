@@ -5,6 +5,16 @@ from constants import DATABASE_MAIN, MONGO_CONNECTION_STRING
 
 app = FastAPI()
 
+app = FastAPI(
+    title="URL shortener webservice",
+    description="Simple url shortener build with fastapi",
+    version="0.0.1",
+    contact={
+        "name": "Soni Lamkaj",
+        "email": "acdsoni@gmail.com",
+    },
+)
+
 @app.on_event("startup")
 def startup_db_client():
     # The connection string here is dangerously exposed in the code for simplicity sake, it should never be done this way in a real prod env
