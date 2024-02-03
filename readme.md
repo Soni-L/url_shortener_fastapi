@@ -1,4 +1,10 @@
-libraries:
+# Live site preview :rocket:
+https://url-shortener-sl-1dd71db24af7.herokuapp.com/docs
 
-pip install fastapi[all] or pip install fastapi and pip install "uvicorn[standard]" for lighter prod env
-pymongo
+# Local Installation
+Run the following command for local installation
+- pip install -r requirements.txt
+
+# Starting the application
+After install run the following to start the app on port 8000
+- uvicorn main:app --host 0.0.0.0 --port 80
