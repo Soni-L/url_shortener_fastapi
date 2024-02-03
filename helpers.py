@@ -1,5 +1,13 @@
 import random
 import string
+from datetime import datetime, timezone
+
+def getFormatedDateTimeStringNow():
+    # Get the current date and time in UTC
+    current_utc_time = datetime.utcnow()
+    # Format the date and time according to ISO8601
+    iso8601_string = current_utc_time.isoformat()[:-3] + 'Z'
+    return iso8601_string
 
 def checkShortCodeCharValidity(shortcode):
     isValid = True

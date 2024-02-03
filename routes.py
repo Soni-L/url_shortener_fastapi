@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Request, Response, HTTPException
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from fastapi.encoders import jsonable_encoder
-from helpers import isValidShortCode, generateRandomShortCode
+from helpers import isValidShortCode, generateRandomShortCode, getFormatedDateTimeStringNow
 
 class UrlItemBody(BaseModel):
     url: str
@@ -30,7 +29,10 @@ async def create_shorturl(urlbody: UrlItemBody, request: Request):
             else:
                 generatedShordCode = generateRandomShortCode()
 
-        urlItemEncoded = jsonable_encoder({"url": urlbody.url, "shortcode" : generatedShordCode})
+        urlItemEncoded = jsonable_encoder({"url": urlbody.url, "shortcode" : generatedShordCode,
+                                            "created": getFormatedDateTimeStringNow(), 
+                                            "lastRedirect": "", 
+                                            "redirectCount": 0})
         new_urlItem = request.app.database["urls"].insert_one(urlItemEncoded)
         created_urlItem = request.app.database["urls"].find_one({"_id": new_urlItem.inserted_id})
         
@@ -45,8 +47,10 @@ async def create_shorturl(urlbody: UrlItemBody, request: Request):
     if (not isValidShortCode(urlbody.shortcode)):
         raise HTTPException(status_code=412, detail="The provided shortcode is invalid")
     
-
-    urlItemEncoded = jsonable_encoder(urlbody)
+    urlItemEncoded = jsonable_encoder({"url": urlbody.url, 
+                                       "shortcode" : generatedShordCode, 
+                                       "created": getFormatedDateTimeStringNow(), 
+                                       "lastRedirect": "", "redirectCount": 0})
     new_urlItem = request.app.database["urls"].insert_one(urlItemEncoded)
     created_urlItem = request.app.database["urls"].find_one(
         {"_id": new_urlItem.inserted_id}
@@ -58,10 +62,20 @@ async def create_shorturl(urlbody: UrlItemBody, request: Request):
 def read_root(shortcode, request: Request):
     foundShortcode = request.app.database["urls"].find_one({"shortcode": shortcode})
     if(foundShortcode):
+        request.app.database["urls"].update_one(
+            {"shortcode": foundShortcode["shortcode"]}, 
+            {"$set": {"lastRedirect": getFormatedDateTimeStringNow(), "redirectCount": foundShortcode["redirectCount"] + 1 }}
+        )
         raise HTTPException(status_code=302, headers={"Location": foundShortcode['url']})
     else:
         raise HTTPException(status_code=404, detail="Shortcode not found")
 
 @router.get("/{shortcode}/stats", status_code=200)
-def read_root(shortcode):
-    return {"stats": shortcode}
+def read_root(shortcode, request: Request):
+    foundShortcode = request.app.database["urls"].find_one({"shortcode": shortcode})
+    if(foundShortcode):
+        return {"created": foundShortcode["created"], 
+                "lastRedirect": foundShortcode["lastRedirect"], 
+                "redirectCount": foundShortcode["redirectCount"]}
+    else:
+        raise HTTPException(status_code=404, detail="Shortcode not found")
