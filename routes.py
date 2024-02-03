@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Body, Request, Response, HTTPException, status
 from pydantic import BaseModel
 from fastapi.encoders import jsonable_encoder
+from helpers import isValidShortCode
 
 class UrlItemBody(BaseModel):
     url: str
@@ -18,11 +19,18 @@ async def create_shorturl(urlbody: UrlItemBody, request: Request):
     if urlbody.url is None:
         raise HTTPException(status_code=400, detail="Url not present")
     
-    check_existing = request.app.database["urls"].find_one(
-        {"url": urlbody.url}
+    if (urlbody.shortcode is None or urlbody.shortcode == ""):
+        return {"shortcode" : 777}
+    
+    check_existing_shortcode = request.app.database["urls"].find_one(
+        {"shortcode": urlbody.shortcode}
     )
-    if check_existing:
+    if check_existing_shortcode:
         raise HTTPException(status_code=409, detail="Shortcode already in use")
+    
+    if (not isValidShortCode(urlbody.shortcode)):
+        raise HTTPException(status_code=412, detail="The provided shortcode is invalid")
+    
 
     urlItemEncoded = jsonable_encoder(urlbody)
     new_urlItem = request.app.database["urls"].insert_one(urlItemEncoded)
