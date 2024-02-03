@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, Response, HTTPException
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
 from fastapi.encoders import jsonable_encoder
 from helpers import isValidShortCode, generateRandomShortCode
@@ -57,7 +58,7 @@ async def create_shorturl(urlbody: UrlItemBody, request: Request):
 def read_root(shortcode, request: Request):
     foundShortcode = request.app.database["urls"].find_one({"shortcode": shortcode})
     if(foundShortcode):
-        return {"url": foundShortcode['url']}
+        raise HTTPException(status_code=302, headers={"Location": foundShortcode['url']})
     else:
         raise HTTPException(status_code=404, detail="Shortcode not found")
 
