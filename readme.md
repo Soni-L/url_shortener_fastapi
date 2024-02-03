@@ -8,6 +8,6 @@ https://url-shortener-sl-1dd71db24af7.herokuapp.com/qmzLhp
 Run the following command for local installation
 - pip install -r requirements.txt
 
-## Starting the application
-After install run the following to start the app on port 8000
+## Running the application
+After install run the following to start the app on port 80
 - uvicorn main:app --host 0.0.0.0 --port 80
