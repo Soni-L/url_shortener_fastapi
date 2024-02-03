@@ -1,6 +1,7 @@
 import random
 import string
-from datetime import datetime, timezone
+from datetime import datetime
+from urllib.parse import urlparse
 
 def getFormatedDateTimeStringNow():
     # Get the current date and time in UTC
@@ -38,3 +39,10 @@ def generateRandomShortCode():
         randomChar = generate_random_alphanumeric_or_underscore()
         randomCode = randomCode + randomChar
     return randomCode
+
+def validateUrlFormat(url):
+    try:
+        parsed_url = urlparse(url)
+        return all([parsed_url.scheme, parsed_url.netloc])
+    except ValueError:
+        return False

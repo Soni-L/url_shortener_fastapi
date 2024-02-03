@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from fastapi.encoders import jsonable_encoder
-from helpers import isValidShortCode, generateRandomShortCode, getFormatedDateTimeStringNow
+from helpers import isValidShortCode, generateRandomShortCode, getFormatedDateTimeStringNow, validateUrlFormat
 
 class UrlItemBody(BaseModel):
     url: str
@@ -16,9 +16,18 @@ def say_hello():
 
 @router.post("/shorten", status_code=201)
 async def create_shorturl(urlbody: UrlItemBody, request: Request):
+
+    #Validates url to be present
     if urlbody.url is None:
         raise HTTPException(status_code=400, detail="Url not present")
     
+    #Validates url to be of the right format (otherwise this endpoint becomes a string shortener)
+    if (not validateUrlFormat(urlbody.url)):
+        raise HTTPException(status_code=400, detail="Invalid url")
+    
+    #Generates and assigns random shortcode in case one is not present in the request
+    #Checks for possible collisions
+    #Stores the url/shortcode pair in the db
     if (urlbody.shortcode is None or urlbody.shortcode == ""):
         generatedShordCode = generateRandomShortCode()
         collisionClearance = False
@@ -29,7 +38,8 @@ async def create_shorturl(urlbody: UrlItemBody, request: Request):
             else:
                 generatedShordCode = generateRandomShortCode()
 
-        urlItemEncoded = jsonable_encoder({"url": urlbody.url, "shortcode" : generatedShordCode,
+        urlItemEncoded = jsonable_encoder({"url": urlbody.url, 
+                                           "shortcode" : generatedShordCode,
                                             "created": getFormatedDateTimeStringNow(), 
                                             "lastRedirect": "", 
                                             "redirectCount": 0})
@@ -38,17 +48,20 @@ async def create_shorturl(urlbody: UrlItemBody, request: Request):
         
         return {"shortcode" : generatedShordCode}
     
+    #Validates the provided shortcode format before moving on
+    if (not isValidShortCode(urlbody.shortcode)):
+        raise HTTPException(status_code=412, detail="The provided shortcode is invalid")
+    
+    #Checks the provided shortcode does not already exist in the database
     check_existing_shortcode = request.app.database["urls"].find_one(
         {"shortcode": urlbody.shortcode}
     )
     if check_existing_shortcode:
         raise HTTPException(status_code=409, detail="Shortcode already in use")
     
-    if (not isValidShortCode(urlbody.shortcode)):
-        raise HTTPException(status_code=412, detail="The provided shortcode is invalid")
-    
+    #Stores the provided shortcode/url pair in the db
     urlItemEncoded = jsonable_encoder({"url": urlbody.url, 
-                                       "shortcode" : generatedShordCode, 
+                                       "shortcode" : urlbody.shortcode, 
                                        "created": getFormatedDateTimeStringNow(), 
                                        "lastRedirect": "", "redirectCount": 0})
     new_urlItem = request.app.database["urls"].insert_one(urlItemEncoded)
