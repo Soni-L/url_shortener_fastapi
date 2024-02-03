@@ -10,7 +10,7 @@ class UrlItemBody(BaseModel):
 router = APIRouter()
 
 @router.get("/")
-def read_root():
+def say_hello():
     return {"Hello": "World"}
 
 
@@ -59,7 +59,7 @@ async def create_shorturl(urlbody: UrlItemBody, request: Request):
     return {"shortcode" : created_urlItem['shortcode']}
 
 @router.get("/{shortcode}", status_code=302)
-def read_root(shortcode, request: Request):
+def go_to_url(shortcode, request: Request):
     foundShortcode = request.app.database["urls"].find_one({"shortcode": shortcode})
     if(foundShortcode):
         request.app.database["urls"].update_one(
@@ -71,7 +71,7 @@ def read_root(shortcode, request: Request):
         raise HTTPException(status_code=404, detail="Shortcode not found")
 
 @router.get("/{shortcode}/stats", status_code=200)
-def read_root(shortcode, request: Request):
+def get_shortcode_stats(shortcode, request: Request):
     foundShortcode = request.app.database["urls"].find_one({"shortcode": shortcode})
     if(foundShortcode):
         return {"created": foundShortcode["created"], 
