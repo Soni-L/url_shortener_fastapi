@@ -14,7 +14,7 @@ def read_root():
     return {"Hello": "World"}
 
 
-@router.post("/shorten")
+@router.post("/shorten", status_code=201)
 async def create_shorturl(urlbody: UrlItemBody, request: Request):
     if urlbody.url is None:
         raise HTTPException(status_code=400, detail="Url not present")
@@ -52,3 +52,15 @@ async def create_shorturl(urlbody: UrlItemBody, request: Request):
     )
 
     return {"shortcode" : created_urlItem['shortcode']}
+
+@router.get("/{shortcode}", status_code=302)
+def read_root(shortcode, request: Request):
+    foundShortcode = request.app.database["urls"].find_one({"shortcode": shortcode})
+    if(foundShortcode):
+        return {"url": foundShortcode['url']}
+    else:
+        raise HTTPException(status_code=404, detail="Shortcode not found")
+
+@router.get("/{shortcode}/stats", status_code=200)
+def read_root(shortcode):
+    return {"stats": shortcode}
