@@ -10,4 +10,4 @@ Run the following command for local installation
 
 ## Running the application
 After install run the following to start the app on port 80
-- uvicorn main:app --host 0.0.0.0 --port 80
+- python -m uvicorn main:app --host 0.0.0.0 --port 80
