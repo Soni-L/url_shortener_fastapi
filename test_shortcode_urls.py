@@ -33,7 +33,7 @@ def test_url_missing():
         
 def test_shortcode_already_in_use():
     with TestClient(app) as client:
-        response_prev = client.post("/shorten", json={"url":"https://www.amazon.com", "shortcode" : "777777"})
+        client.post("/shorten", json={"url":"https://www.amazon.com", "shortcode" : "777777"})
         response = client.post("/shorten", json={"url":"https://www.amazon.com", "shortcode" : "777777"})
         assert response.status_code == 409
 
@@ -41,3 +41,32 @@ def test_invalid_shortcode():
     with TestClient(app) as client:
         response = client.post("/shorten", json={"url":"https://www.amazon.com", "shortcode" : "55!"})
         assert response.status_code == 412
+
+def test_successful_shortcode_retreival():
+    with TestClient(app) as client:
+        client.post("/shorten", json={"url":"https://www.amazon.com", "shortcode" : "888888"})
+        response = client.get("/888888")
+        assert response.status_code == 302
+
+def test__shortcode_notfound():
+    with TestClient(app) as client:
+        client.post("/shorten", json={"url":"https://www.amazon.com", "shortcode" : "888888"})
+        response = client.get("/000000")
+        assert response.status_code == 404
+
+def test__shortcode_stats_redirect_count():
+    with TestClient(app) as client:
+        client.post("/shorten", json={"url":"https://www.amazon.com", "shortcode" : "888888"})
+        client.get("/888888")
+        client.get("/888888")
+        response = client.get("/888888/stats")
+        body = response.json()
+
+        assert response.status_code == 200
+        assert body.get("redirectCount") == 2
+
+def test__shortcode_stats_notfound():
+    with TestClient(app) as client:
+        client.post("/shorten", json={"url":"https://www.amazon.com", "shortcode" : "888888"})
+        response = client.get("/000000/stats")
+        assert response.status_code == 404

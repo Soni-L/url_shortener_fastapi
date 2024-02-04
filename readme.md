@@ -5,6 +5,12 @@ https://url-shortener-sl-1dd71db24af7.herokuapp.com/docs
 https://url-shortener-sl-1dd71db24af7.herokuapp.com/qmzLhp
 
 ## Local Installation 🛠
+Clone the git repository to your machine
+
+```
+git clone https://github.com/Soni-L/url_shortener_fastapi.git
+```
+
 Run the following command for local installation
 
 ```
