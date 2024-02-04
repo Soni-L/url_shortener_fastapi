@@ -18,13 +18,24 @@ async def shutdown_event():
 
 app.include_router(router)
 
-def test_create_shortcode_url_pair():
+# POST /shorten
+def test_create_shortcode_url_pair_provided_shortcode():
     with TestClient(app) as client:
         response = client.post("/shorten", json={"url":"https://www.amazon.com", "shortcode" : "777777"})
         assert response.status_code == 201
         
         body = response.json()
         assert body.get("shortcode") == "777777"
+
+def test_create_shortcode_url_pair_generated_shortcode():
+    with TestClient(app) as client:
+        response = client.post("/shorten", json={"url":"https://www.amazon.com", "shortcode" : ""})
+        assert response.status_code == 201
+        
+        body = response.json()
+        newlyGeneratedCode = body.get("shortcode")
+        response_found_shorcode = client.get('/' + newlyGeneratedCode + '/stats')
+        assert response_found_shorcode.status_code == 200
 
 def test_url_missing():
     with TestClient(app) as client:
@@ -42,6 +53,7 @@ def test_invalid_shortcode():
         response = client.post("/shorten", json={"url":"https://www.amazon.com", "shortcode" : "55!"})
         assert response.status_code == 412
 
+# GET /<shortcode>
 def test_successful_shortcode_retreival():
     with TestClient(app) as client:
         client.post("/shorten", json={"url":"https://www.amazon.com", "shortcode" : "888888"})
@@ -54,6 +66,7 @@ def test__shortcode_notfound():
         response = client.get("/000000")
         assert response.status_code == 404
 
+# GET /<shortcode>/stats
 def test__shortcode_stats_redirect_count():
     with TestClient(app) as client:
         client.post("/shorten", json={"url":"https://www.amazon.com", "shortcode" : "888888"})
