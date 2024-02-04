@@ -3,8 +3,6 @@ from fastapi import FastAPI
 from routes import router
 from constants import DATABASE_MAIN, MONGO_CONNECTION_STRING
 
-app = FastAPI()
-
 app = FastAPI(
     title="URL shortener webservice",
     description="Simple url shortener build with fastapi",
