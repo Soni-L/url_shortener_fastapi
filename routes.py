@@ -18,7 +18,7 @@ def say_hello():
 async def create_shorturl(urlbody: UrlItemBody, request: Request):
 
     #Validates url to be present
-    if urlbody.url is None:
+    if (urlbody.url is None or urlbody.url == ""):
         raise HTTPException(status_code=400, detail="Url not present")
     
     #Validates url to be of the right format (otherwise this endpoint becomes a string shortener)
