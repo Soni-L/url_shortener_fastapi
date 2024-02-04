@@ -29,7 +29,7 @@ def test_create_shortcode_url_pair_provided_shortcode():
 
 def test_create_shortcode_url_pair_generated_shortcode():
     with TestClient(app) as client:
-        response = client.post("/shorten", json={"url":"https://www.amazon.com", "shortcode" : ""})
+        response = client.post("/shorten", json={"url":"https://www.amazon.com"})
         assert response.status_code == 201
         
         body = response.json()

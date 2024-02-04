@@ -1,11 +1,12 @@
+from typing import Optional
 from fastapi import APIRouter, Request, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from fastapi.encoders import jsonable_encoder
 from helpers import isValidShortCode, generateRandomShortCode, getFormatedDateTimeStringNow, validateUrlFormat
 
 class UrlItemBody(BaseModel):
     url: str
-    shortcode: str | None = None
+    shortcode: Optional[str] = Field(None, description="")
 
 router = APIRouter()
 
